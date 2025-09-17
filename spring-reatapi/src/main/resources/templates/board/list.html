@@ -86,5 +86,60 @@
     </form>
   </div>
 </div>
+<script>
+
+  //전체 게시글 조회
+  function loadBoards() {
+    $.ajax({
+      url: '/api/boards',
+      method: 'GET',
+      success: function (response) {
+        if (response.success) {
+          const tableBody = $("#boardList tbody");
+          tableBody.empty(); //새로고침 시 데이터 중첩되는 예외 방지
+
+          $.each(response.data, function (key, value) {
+
+            const formattedData = value.createdAt.replace('T', ' ');
+
+            tableBody.append(
+            `
+              <tr data-id="\${board.id}">
+                <td>${value.id}</td>
+                <td><a href="#" class="viewLink" data-id="${value.id}">${value.title}</a></td>
+                <td>${value.writer}</td>
+                <td>${formattedData}</td>
+                <td>${value.views}</td>
+                <td>
+                  <button class="btn btn-sm btn-primary editBtn">Edit</button>
+                  <button class="btn btn-sm btn-danger deleteBtn">Delete</button>
+                </td>
+              </tr>
+            `
+            );
+          });
+        }
+      },
+      error: function (xhr, status, error) {
+        let response;
+        try {
+          response = JSON.parse(xhr.responseText);
+        } catch (e) {
+          alert("응답 데이터 처리 중 오류가 발생하였습니다");
+          return e;
+        }
+
+        let errorMessage = response.message;
+        if (xhr.status === 500) {
+          alert(errorMessage);
+        }
+      }
+    });
+  }
+
+  $(function () {
+    loadBoards();
+  });
+</script>
 </body>
 </html>
