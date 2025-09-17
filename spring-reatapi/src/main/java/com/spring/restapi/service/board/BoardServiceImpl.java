@@ -93,4 +93,19 @@ public class BoardServiceImpl implements BoardService{
             throw new RuntimeException("게시글 수정 중 오류가 발생하였습니다");
         }
     }
+
+    @Transactional
+    @Override
+    public ApiResponse<?> deleteBoard(int id) {
+        try {
+            boardMapper.deleteBoard(id);
+            return new ApiResponse<>(true, "게시글을 삭제하였습니다");
+        } catch (DataAccessException e) {
+            log.error("게시글 삭제(데이터베이스 오류) = {}", e.getMessage());
+            throw new RuntimeException("게시글 삭제 중 오류가 발생하였습니다");
+        } catch (Exception e) {
+            log.error("게시글 삭제(기타 오류) = {}", e.getMessage());
+            throw new RuntimeException("게시글 삭제 중 오류가 발생하였습니다");
+        }
+    }
 }

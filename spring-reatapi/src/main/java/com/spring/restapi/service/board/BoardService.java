@@ -14,4 +14,6 @@ public interface BoardService {
     ApiResponse<?> writeBoard(@Valid WriteBoardDTO writeBoardDTO);
 
     ApiResponse<?> updateBoard(@Valid UpdateBoardDTO updateBoardDTO);
+
+    ApiResponse<?> deleteBoard(int id);
 }

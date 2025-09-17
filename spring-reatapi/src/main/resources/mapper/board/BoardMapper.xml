@@ -41,4 +41,8 @@
             writer = #{writer}
         WHERE id = #{id}
     </update>
+
+    <delete id="deleteBoard">
+        DELETE FROM board WHERE id = #{id}
+    </delete>
 </mapper>

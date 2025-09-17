@@ -42,4 +42,10 @@ public class BoardController {
         ApiResponse<?> response = boardService.updateBoard(updateBoardDTO);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> deleteBoard(@PathVariable(value = "id") int id) {
+        ApiResponse<?> response = boardService.deleteBoard(id);
+        return ResponseEntity.ok(response);
+    }
 }

@@ -381,6 +381,40 @@
     loadBoards();
   });
 
+  //게시글 삭제
+  $(document).on("click", ".deleteBtn", function (e) {
+    e.preventDefault();
+    if (confirm("게시글을 삭제하시겠습니까?")) {
+      const row = $(this).closest('tr');
+      const id = row.data('id');
+
+      $.ajax({
+        url: `/api/boards/${id}`,
+        method: 'DELETE',
+        success: function (response) {
+          if (response.success) {
+            alert(response.message);
+            loadBoards();
+          }
+        },
+        error: function (xhr, status, error) {
+          let response;
+          try {
+            response = JSON.parse(xhr.responseText);
+          } catch (e) {
+            alert("응답 데이터 처리 중 오류가 발생하였습니다");
+            return e;
+          }
+
+          let errorMessage = response.message;
+          if (xhr.status === 500) {
+            alert(errorMessage);
+          }
+        }
+      });
+    }
+  });
+
   $(function () {
     loadBoards();
     addButtonEvent();
