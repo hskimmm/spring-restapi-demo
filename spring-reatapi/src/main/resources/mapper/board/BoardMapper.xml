@@ -7,4 +7,16 @@
         SELECT id, title, writer, content, created_at as createdAt, views
         FROM board
     </select>
+
+    <select id="getBoard" resultType="com.spring.restapi.domain.Board">
+        SELECT id, title, writer, content, created_at as createdAt, views
+        FROM board
+        WHERE id = #{id}
+    </select>
+
+    <update id="incrementViews">
+        UPDATE board SET
+        views = views + 1
+        WHERE id = #{id}
+    </update>
 </mapper>

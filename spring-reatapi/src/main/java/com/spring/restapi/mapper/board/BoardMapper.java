@@ -8,4 +8,8 @@ import java.util.List;
 @Mapper
 public interface BoardMapper {
     List<Board> getBoards();
+
+    Board getBoard(int id);
+
+    void incrementViews(int id);
 }

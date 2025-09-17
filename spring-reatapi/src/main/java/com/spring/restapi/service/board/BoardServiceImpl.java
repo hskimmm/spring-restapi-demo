@@ -21,7 +21,6 @@ public class BoardServiceImpl implements BoardService{
     @Override
     public ApiResponse<?> getBoards() {
         try {
-
             List<Board> boardList = boardMapper.getBoards();
             return new ApiResponse<>(true, "성공적으로 전체 게시글을 조회하였습니다", boardList);
         } catch (DataAccessException e) {
@@ -30,6 +29,24 @@ public class BoardServiceImpl implements BoardService{
         } catch (Exception e) {
             log.error("전체 게시글 조회(기타 오류) = {}", e.getMessage());
             throw new RuntimeException("전체 게시글 조회 중 오류가 발생하였습니다");
+        }
+    }
+
+    @Transactional
+    @Override
+    public ApiResponse<?> getBoard(int id) {
+        try {
+            //조회수 증가
+            boardMapper.incrementViews(id);
+
+            Board board = boardMapper.getBoard(id);
+            return new ApiResponse<>(true, "게시글을 조회하였습니다", board);
+        } catch (DataAccessException e) {
+            log.error("게시글 상세 조회(데이터베이스 오류) = {}", e.getMessage());
+            throw new RuntimeException("게시글 상세 조회 중 오류가 발생하였습니다");
+        } catch (Exception e) {
+            log.error("게시글 상세 조회(기타 오류) = {}", e.getMessage());
+            throw new RuntimeException("게시글 상세 조회 중 오류가 발생하였습니다");
         }
     }
 }

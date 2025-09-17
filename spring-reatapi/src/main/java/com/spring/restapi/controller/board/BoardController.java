@@ -5,6 +5,7 @@ import com.spring.restapi.service.board.BoardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,6 +18,12 @@ public class BoardController {
     @GetMapping("/boards")
     public ResponseEntity<ApiResponse<?>> getBoards() {
         ApiResponse<?> response = boardService.getBoards();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/board/{id}")
+    public ResponseEntity<ApiResponse<?>> getBoard(@PathVariable(value = "id") int id) {
+        ApiResponse<?> response = boardService.getBoard(id);
         return ResponseEntity.ok(response);
     }
 }
