@@ -55,7 +55,7 @@
         </p>
       </div>
     </div>
-    <button id="backToList" class="btn btn-secondary mt-3" onclick="location.href='/list'">목록으로</button>
+    <button id="backToList" class="btn btn-secondary mt-3">목록으로</button>
     <!-- 목록으로 돌아가기 버튼 -->
   </div>
 
@@ -66,20 +66,20 @@
     <form id="writeForm">
       <div class="mb-3">
         <label for="title" class="form-label">제목</label>
-        <input type="text" class="form-control" id="title" name="title" required>
+        <input type="text" class="form-control" id="title" name="title">
         <!-- 제목 입력 필드 -->
       </div>
       <div class="mb-3">
         <label for="writer" class="form-label">작성자</label>
-        <input type="text" class="form-control" id="writer" name="writer" required>
+        <input type="text" class="form-control" id="writer" name="writer">
         <!-- 작성자 입력 필드 -->
       </div>
       <div class="mb-3">
         <label for="content" class="form-label">내용</label>
-        <textarea class="form-control" id="content" name="content" rows="5" required></textarea>
+        <textarea class="form-control" id="content" name="content" rows="5"></textarea>
         <!-- 내용 입력 필드 -->
       </div>
-      <button type="submit" class="btn btn-primary">저장</button>
+      <button type="submit" class="btn btn-primary" id="writeBtn">저장</button>
       <!-- 저장 버튼 -->
       <button type="button" id="cancelWrite" class="btn btn-secondary">취소</button>
       <!-- 취소 버튼 -->
@@ -90,11 +90,68 @@
 
   //이벤트 처리
   function addButtonEvent() {
+    $("#showWriteForm").on("click", function (e) {
+      e.preventDefault();
+      $("#boardList").hide();
+      $("#boardWrite").show();
+    });
+
+    $("#writeForm").submit(function (e) {
+      e.preventDefault();
+      writeBoard();
+    });
+
+    $("#cancelWrite").on("click", function (e) {
+      e.preventDefault();
+      showList();
+    });
+
+    $("#backToList").on("click", function (e) {
+      e.preventDefault();
+      showList();
+    });
+  }
+
+  //INPUT 유효성 검사
+  function validateInput(formData) {
+    for (const [key, value] of formData.entries()) {
+      let trimmedValue = value.trim();
+      if (value !== trimmedValue) {
+        formData.set(key, trimmedValue);
+      }
+
+      if (key === 'title' && trimmedValue === '') {
+        alert("제목을 입력하세요");
+        $("#title").focus();
+        return false;
+      }
+
+      if (key === 'writer' && trimmedValue === '') {
+        alert("작성자를 입력하세요");
+        $("#writer").focus();
+        return false;
+      }
+
+      if (key === 'content' && trimmedValue === '') {
+        alert("내용을 입력하세요");
+        $("#content").focus();
+        return false;
+      }
+    }
+    return true;
   }
 
   //날짜 데이터 포멧팅
   function dateFormatted(data) {
     return data.replace('T', ' ');
+  }
+
+  //게시글 리스트 표시
+  function showList() {
+    $("#boardList").show();
+    $("#boardWrite").hide();
+    $("#boardView").hide();
+    loadBoards();
   }
 
   //게시글 상세 화면 표시
@@ -126,7 +183,7 @@
 
             tableBody.append(
             `
-              <tr data-id="\${board.id}">
+              <tr data-id="${value.id}">
                 <td>${value.id}</td>
                 <td><a href="#" class="viewLink" data-id="${value.id}">${value.title}</a></td>
                 <td>${value.writer}</td>
@@ -164,7 +221,7 @@
     e.preventDefault();
     const id = $(this).data('id');
     $.ajax({
-      url: `/api/board/${id}`,
+      url: `/api/boards/${id}`,
       method: 'GET',
       success: function (response) {
         showBoardView(response.data);
@@ -184,6 +241,144 @@
         }
       }
     });
+  });
+
+  //게시글 작성
+  function writeBoard() {
+    const formData = new FormData($("#writeForm")[0]);
+    if (validateInput(formData)) {
+      $.ajax({
+        url: '/api/boards',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+          if (response.success) {
+            alert(response.message);
+            showList();
+          }
+        },
+        error: function (xhr, status, error) {
+          let response;
+          try {
+            response = JSON.parse(xhr.responseText);
+          } catch (e) {
+            alert("응답 데이터 처리 중 오류가 발생하였습니다");
+            return e;
+          }
+
+          let errorMessage = response.message;
+          if (xhr.status === 400) {
+            let errors = response.items;
+            if (errors['title']) {
+              alert(errors['title']);
+              return false;
+            } else if (errors['writer']) {
+              alert(errors['writer']);
+              return false;
+            } else if (errors['content']) {
+              alert(errors['content']);
+              return false;
+            }
+          } else if (xhr.status === 500) {
+            alert(errorMessage);
+          }
+        }
+      });
+    }
+  }
+
+  //게시글 수정
+  $(document).on("click", '.editBtn', function (e) {
+    e.preventDefault();
+    const row = $(this).closest('tr');
+    const id = row.data('id');
+    const title = row.find(".viewLink").text();
+    const writer = row.children("td:nth-child(3)").text();
+
+    row.html(`
+      <td>${id}</td>
+      <td><input type="text" class="form-control editTitle" value="${title}"></td>
+      <td><input type="text" class="form-control editWriter" value="${writer}"></td>
+      <td></td>
+      <td></td>
+      <td>
+          <button class="btn btn-sm btn-success saveEditBtn">Save</button>
+          <button class="btn btn-sm btn-secondary cancelEditBtn">Cancel</button>
+      </td>
+    `);
+  });
+
+  //게시글 수정
+  $(document).on("click", ".saveEditBtn", function (e) {
+    const row = $(this).closest("tr");
+    const id = row.data("id");
+    const newTitle = row.find(".editTitle").val().trim();
+    const newWriter = row.find(".editWriter").val().trim();
+
+    if (newTitle === '') {
+      alert("수정할 제목을 입력하세요");
+      $(".editTitle").focus();
+      return false;
+    }
+
+    if (newWriter === '') {
+      alert("작성자를 입력하세요");
+      $(".editWriter").focus();
+      return false;
+    }
+
+    const data = {
+      id : id,
+      title : newTitle,
+      writer : newWriter
+    }
+
+    $.ajax({
+      url: '/api/boards',
+      method: 'PUT',
+      data: JSON.stringify(data),
+      contentType: 'application/json',
+      success: function (response) {
+        if (response.success) {
+          alert(response.message);
+          loadBoards();
+        }
+      },
+      error: function (xhr, status, error) {
+        let response;
+        try {
+          response = JSON.parse(xhr.responseText);
+        } catch (e) {
+          alert("응답 데이터 처리 중 오류가 발생하였습니다");
+          return e;
+        }
+
+        let errorMessage = response.message;
+        if (xhr.status === 400) {
+          let errors = response.items;
+          if (errors['id']) {
+            alert(errors['id']);
+            return false;
+          } else if (errors['title']) {
+            alert(errors['title']);
+            return false;
+          } else if (errors['writer']) {
+            alert(errors['writer']);
+            return false;
+          }
+        } else if (xhr.status === 500) {
+          alert(errorMessage);
+        }
+      }
+    });
+  });
+
+  //Cancel 클릭
+  $(document).on("click", ".cancelEditBtn", function (e) {
+    e.preventDefault();
+    loadBoards();
   });
 
   $(function () {

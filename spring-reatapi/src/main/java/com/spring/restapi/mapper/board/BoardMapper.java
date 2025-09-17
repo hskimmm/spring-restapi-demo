@@ -12,4 +12,8 @@ public interface BoardMapper {
     Board getBoard(int id);
 
     void incrementViews(int id);
+
+    void writeBoard(Board board);
+
+    void updateBoard(Board board);
 }
