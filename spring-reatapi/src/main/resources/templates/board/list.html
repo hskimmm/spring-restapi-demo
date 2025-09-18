@@ -606,9 +606,42 @@
         }
       }
     });
-
-
   });
+
+   //댓글 삭제
+   $(document).on("click", ".delete-button", function (e) {
+     e.preventDefault();
+
+     if (confirm("댓글을 삭제하시겠습니까?")) {
+       const row = $(this).closest('li');
+       const commentId = row.data('id');
+
+       $.ajax({
+         url: `/api/comment/${commentId}`,
+         method: 'DELETE',
+         success: function (response) {
+           if (response.success) {
+             alert(response.message);
+             loadBoardDetail(currentBoardId);
+           }
+         },
+         error: function (xhr, status, error) {
+           let response;
+           try {
+             response = JSON.parse(xhr.responseText);
+           } catch (e) {
+             alert("응답 데이터 처리 중 오류가 발생하였습니다");
+             return e;
+           }
+
+           let errorMessage = response.message;
+           if (xhr.status === 500) {
+             alert(errorMessage);
+           }
+         }
+       })
+     }
+   });
   $(function () {
     loadBoards();
     addButtonEvent();

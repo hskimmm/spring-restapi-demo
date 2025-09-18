@@ -18,4 +18,8 @@
             content = #{content}
         WHERE id = #{id}
     </update>
+
+    <delete id="deleteComment">
+        DELETE FROM comments WHERE id = #{id}
+    </delete>
 </mapper>

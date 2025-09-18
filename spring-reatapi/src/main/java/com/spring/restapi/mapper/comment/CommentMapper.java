@@ -12,4 +12,6 @@ public interface CommentMapper {
     void writeComment(Comment comment);
 
     void updateComment(Comment comment);
+
+    void deleteComment(int id);
 }
