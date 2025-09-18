@@ -1,5 +1,6 @@
 package com.spring.restapi.controller.comment;
 
+import com.spring.restapi.dto.UpdateCommentDTO;
 import com.spring.restapi.dto.WriteCommentDTO;
 import com.spring.restapi.response.ApiResponse;
 import com.spring.restapi.service.comment.CommentService;
@@ -25,6 +26,12 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<ApiResponse<?>> writeComment(@Valid @RequestBody WriteCommentDTO writeCommentDTO) {
         ApiResponse<?> response = commentService.writeComment(writeCommentDTO);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping
+    public ResponseEntity<ApiResponse<?>> updateComment(@Valid @RequestBody UpdateCommentDTO updateCommentDTO) {
+        ApiResponse<?> response = commentService.updateComment(updateCommentDTO);
         return ResponseEntity.ok(response);
     }
 }

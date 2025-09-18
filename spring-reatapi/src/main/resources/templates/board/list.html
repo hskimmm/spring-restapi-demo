@@ -535,6 +535,80 @@
       }
     });
   }
+
+   //댓글 수정
+   $(document).on("click", ".edit-button", function (e) {
+     e.preventDefault();
+     const listItem = $(this).closest('li');
+     const commentId = listItem.data('id');
+     const commentContentDiv = listItem.find('.comment-content');
+     const currentContent = commentContentDiv.find('strong').text();
+
+     // 수정 모드로 변경
+     commentContentDiv.html(`
+        <input type="text" class="form-control edit-input" name="updateContent" value="${currentContent}">
+        <button class="btn btn-success btn-sm save-button mt-2">Save</button>
+        <button class="btn btn-secondary btn-sm cancel-button mt-2">Cancel</button>
+    `);
+   });
+
+  //댓글 수정
+  $(document).on("click", ".save-button", function (e) {
+    e.preventDefault();
+    let contentValue = $("input[name='updateContent']").val().trim();
+
+    if (contentValue === '') {
+      alert("댓글 내용을 입력하세요");
+      $(".edit-input").focus();
+      return false;
+    }
+
+    const row = $(this).closest('li');
+    const commentId = row.data('id');
+
+    const data = {
+      id : commentId,
+      content : contentValue
+    }
+
+    $.ajax({
+      url: '/api/comment',
+      method: 'PUT',
+      data: JSON.stringify(data),
+      contentType: 'application/json',
+      success: function (response) {
+        if (response.success) {
+          alert(response.message);
+          loadBoardDetail(currentBoardId);
+        }
+      },
+      error: function (xhr, status, error) {
+        let response;
+        try {
+          response = JSON.parse(xhr.responseText);
+        } catch (e) {
+          alert("응답 데이터 처리 중 오류가 발생하였습니다");
+          return e;
+        }
+
+        let errorMessage = response.message;
+        if (xhr.status === 400) {
+          let errors = response.items;
+          if (errors['id']) {
+            alert(errors['id']);
+            return false;
+          } else if (errors['content']) {
+            alert(errors['content']);
+            return false;
+          }
+        } else if (xhr.status === 500) {
+          alert(errorMessage);
+        }
+      }
+    });
+
+
+  });
   $(function () {
     loadBoards();
     addButtonEvent();

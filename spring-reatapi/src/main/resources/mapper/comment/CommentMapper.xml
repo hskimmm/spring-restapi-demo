@@ -12,4 +12,10 @@
     <insert id="writeComment">
         INSERT INTO comments ( board_id, content ) VALUES ( #{boardId}, #{content} )
     </insert>
+
+    <update id="updateComment">
+        UPDATE comments SET
+            content = #{content}
+        WHERE id = #{id}
+    </update>
 </mapper>

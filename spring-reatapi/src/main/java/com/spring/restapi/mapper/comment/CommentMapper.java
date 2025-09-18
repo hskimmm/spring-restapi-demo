@@ -10,4 +10,6 @@ public interface CommentMapper {
     List<Comment> getComments(int id);
 
     void writeComment(Comment comment);
+
+    void updateComment(Comment comment);
 }
