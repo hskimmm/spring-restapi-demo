@@ -55,6 +55,21 @@
         </p>
       </div>
     </div>
+    <div class="container mt-5">
+      <!-- Add Comment Form -->
+      <div class="card p-4 shadow-sm">
+        <form id="add-comment-form">
+          <div class="mb-3">
+            <input type="text" id="comment-content" class="form-control" placeholder="Enter your comment"
+                   required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Add Comment</button>
+        </form>
+      </div>
+      <!-- Comment List -->
+      <h2 class="mt-5"></h2>
+      <ul class="list-group" id="comment-list"></ul>
+    </div>
     <button id="backToList" class="btn btn-secondary mt-3">목록으로</button>
     <!-- 목록으로 돌아가기 버튼 -->
   </div>
@@ -225,6 +240,46 @@
       method: 'GET',
       success: function (response) {
         showBoardView(response.data);
+        //댓글 목록 조회
+        $.ajax({
+          url: `/api/comment/${id}`,
+          method: 'GET',
+          success: function (response) {
+            if (response.success) {
+              console.log(response.data);
+
+              let str = '';
+
+              $.each(response.data, function (key, value) {
+                const formattedData = dateFormatted(value.createdAt);
+
+                str += `
+                      <li class="list-group-item d-flex justify-content-between align-items-center" data-id="${value.id}">
+                        <div class="comment-content"><strong>${value.content}</strong><br><small class="text-muted">${formattedData}</small></div>
+                        <div>
+                            <button class="btn btn-warning btn-sm edit-button">Edit</button>
+                            <button class="btn btn-danger btn-sm delete-button">Delete</button>
+                        </div>
+                      </li>`
+              });
+              $("#comment-list").html(str);
+            }
+          },
+          error: function (xhr, status, error) {
+            let response;
+            try {
+              response = JSON.parse(xhr.responseText);
+            } catch (e) {
+              alert("응답 데이터 처리 중 오류가 발생하였습니다");
+              return e;
+            }
+
+            let errorMessage = response.message;
+            if (xhr.status === 500) {
+              alert(errorMessage);
+            }
+          }
+        });
       },
       error: function (xhr, status, error) {
         let response;
