@@ -1,6 +1,7 @@
 package com.spring.restapi.service.comment;
 
 import com.spring.restapi.domain.Comment;
+import com.spring.restapi.dto.WriteCommentDTO;
 import com.spring.restapi.mapper.comment.CommentMapper;
 import com.spring.restapi.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,26 @@ public class CommentServiceImpl implements CommentService{
         } catch (Exception e) {
             log.error("댓글 전체 조회(기타 오류) = {}", e.getMessage());
             throw new RuntimeException("댓글 전체 조회 중 오류가 발생하였습니다");
+        }
+    }
+
+    @Transactional
+    @Override
+    public ApiResponse<?> writeComment(WriteCommentDTO writeCommentDTO) {
+        try {
+            Comment comment = Comment.builder()
+                    .boardId(writeCommentDTO.getBoardId())
+                    .content(writeCommentDTO.getContent())
+                    .build();
+
+            commentMapper.writeComment(comment);
+            return new ApiResponse<>(true, "댓글을 등록하였습니다");
+        } catch (DataAccessException e) {
+            log.error("댓글 등록(데이터베이스 오류) = {}", e.getMessage());
+            throw new RuntimeException("댓글 등록 중 오류가 발생하였습니다");
+        } catch (Exception e) {
+            log.error("댓글 등록(기타 오류) = {}", e.getMessage());
+            throw new RuntimeException("댓글 등록 중 오류가 발생하였습니다");
         }
     }
 }

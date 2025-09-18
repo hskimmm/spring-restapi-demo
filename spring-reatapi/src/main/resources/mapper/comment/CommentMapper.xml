@@ -8,4 +8,8 @@
         FROM comments
         WHERE board_id = #{id}
     </select>
+
+    <insert id="writeComment">
+        INSERT INTO comments ( board_id, content ) VALUES ( #{boardId}, #{content} )
+    </insert>
 </mapper>
