@@ -4,16 +4,59 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>게시판</title>
+  <style>
+    #searchList {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    /* 페이징 CSS */
+    #pagination .page-link {
+      color: #667eea;
+      padding: 8px 12px;
+      text-decoration: none;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    #pagination .page-link:hover {
+      background-color: #f8f9fa;
+      color: #0056b3;
+    }
+
+    #pagination .active .page-link {
+      background-color: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+  </style>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
 <div class="container mt-4">
-  <!-- Bootstrap 컨테이너 생성 -->
   <h2 class="mb-4">게시판</h2>
-  <!-- 제목 표시 -->
-
+  <!-- 검색 -->
+  <div id="searchList">
+    <div class="col-auto">
+      <select name="type" class="form-select form-select-sm">
+        <option value="">-------</option>
+        <option value="T">제목</option>
+        <option value="C">내용</option>
+        <option value="W">작성자</option>
+        <option value="TC">제목+내용</option>
+        <option value="TCW">제목+내용+작성자</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <input type="text" name="keyword" class="form-control form-control-sm" placeholder="검색어">
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-sm btn-primary btn-search">검색</button>
+    </div>
+  </div>
   <!-- 게시글 목록 -->
   <div id="boardList">
     <table class="table table-striped">
@@ -35,6 +78,8 @@
     <button id="showWriteForm" class="btn btn-success">New Write</button>
     <!-- 새 글 작성 버튼 -->
   </div>
+  <!-- 페이징 -->
+  <div id="pagination" style="padding:10px; text-align:center;"></div>
 
   <!-- 게시글 상세보기 -->
   <div id="boardView" style="display: none;">
@@ -102,13 +147,17 @@
 </div>
 <script>
 
-   let currentBoardId;
+  const pageUL = $("#pagination");
+
+  let currentBoardId;
 
   //이벤트 처리
   function addButtonEvent() {
     $("#showWriteForm").on("click", function (e) {
       e.preventDefault();
       $("#boardList").hide();
+      $("#searchList").hide();
+      $("#pagination").hide();
       $("#boardWrite").show();
     });
 
@@ -131,6 +180,19 @@
       e.preventDefault();
       addComment();
     });
+
+    pageUL.on("click", "a", function (e) {
+      e.preventDefault();
+      const pageNum = $(this).attr('href');
+      loadBoards(pageNum);
+    });
+
+    $(".btn-search").on("click", function (e) {
+      e.preventDefault();
+      loadBoards();
+    });
+
+    $(".btn-search").keyup()
   }
 
   //INPUT 유효성 검사
@@ -172,6 +234,8 @@
     $("#boardList").show();
     $("#boardWrite").hide();
     $("#boardView").hide();
+    $("#searchList").show();
+    $("#pagination").show();
     loadBoards();
   }
 
@@ -186,19 +250,47 @@
     $("#viewHits").text(data.views);
     $("#boardList").hide();
     $("#boardView").show();
+    $("#searchList").hide();
+    $("#pagination").hide();
   }
 
   //전체 게시글 조회
-  function loadBoards() {
+  function loadBoards(pageNum = 1) {
+
+    const selectObj = $("select[name='type']");
+    const selectValue = selectObj.val();
+    const keywordValue = $("input[name='keyword']").val().trim();
+
+    let requestData = {pageNum};
+
+    //검색 조건이 있는 경우
+    if (selectValue && keywordValue && keywordValue.trim()) {
+      const arr = selectValue.split("");
+
+      requestData = {
+        types: arr,
+        keyword: keywordValue,
+        pageNum: pageNum,
+        amount: 10
+      }
+    }
+
     $.ajax({
       url: '/api/boards',
       method: 'GET',
+      data: requestData,
+      traditional: true,
+      dataType: 'JSON',
       success: function (response) {
         if (response.success) {
+          const data = response.items;
+          const boardsData = data.boards;
+          const pageData = data.page;
+
           const tableBody = $("#boardList tbody");
           tableBody.empty(); //새로고침 시 데이터 중첩되는 예외 방지
 
-          $.each(response.data, function (key, value) {
+          $.each(boardsData, function (key, value) {
 
             const formattedData = dateFormatted(value.createdAt);
 
@@ -218,6 +310,8 @@
             `
             );
           });
+
+          renderPagination(pageData);
         }
       },
       error: function (xhr, status, error) {
@@ -235,6 +329,34 @@
         }
       }
     });
+  }
+
+  //페이징
+  function renderPagination(pageData) {
+    const page = pageData;
+    const startPage = page.startPage;
+    const endPage = page.endPage;
+    const prev = page.prev;
+    const next = page.next;
+    const pageNum = page.pagination.pageNum;
+
+    let pageStr = '<ul style="list-style:none; display:flex; gap:8px; padding:0; margin:0; justify-content:center;">';
+
+    if (prev) {
+      pageStr += `<li class="page-item"><a class="page-link" href="${startPage - 1}" tabindex="-1">Prev</a></li>`
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pageStr += `<li class="page-item ${i === pageNum ? 'active':''}"><a class="page-link" href="${i}">${i}</a></li>`;
+    }
+
+    if (next) {
+      pageStr += `<li class="page-item"> <a class="page-link" href="${endPage + 1}">Next</a> </li>`;
+    }
+
+    pageStr += '</ul>';
+
+    pageUL.html(pageStr);
   }
 
   //게시글 상세 조회

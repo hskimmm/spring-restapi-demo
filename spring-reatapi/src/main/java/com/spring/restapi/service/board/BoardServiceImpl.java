@@ -5,6 +5,7 @@ import com.spring.restapi.dto.UpdateBoardDTO;
 import com.spring.restapi.dto.WriteBoardDTO;
 import com.spring.restapi.mapper.board.BoardMapper;
 import com.spring.restapi.response.ApiResponse;
+import com.spring.restapi.util.Pagination;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataAccessException;
@@ -21,9 +22,9 @@ public class BoardServiceImpl implements BoardService{
 
     @Transactional(readOnly = true)
     @Override
-    public ApiResponse<?> getBoards() {
+    public ApiResponse<?> getBoards(Pagination pagination) {
         try {
-            List<Board> boardList = boardMapper.getBoards();
+            List<Board> boardList = boardMapper.getBoards(pagination);
             return new ApiResponse<>(true, "성공적으로 전체 게시글을 조회하였습니다", boardList);
         } catch (DataAccessException e) {
             log.error("전체 게시글 조회(데이터베이스 오류) = {}", e.getMessage());
@@ -106,6 +107,20 @@ public class BoardServiceImpl implements BoardService{
         } catch (Exception e) {
             log.error("게시글 삭제(기타 오류) = {}", e.getMessage());
             throw new RuntimeException("게시글 삭제 중 오류가 발생하였습니다");
+        }
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public int count(Pagination pagination) {
+        try {
+            return boardMapper.count(pagination);
+        } catch (DataAccessException e) {
+            log.error("전체 게시글 개수 조회(데이터베이스 오류) = {}", e.getMessage());
+            throw new RuntimeException("전체 게시글 개수 조회 중 오류가 발생하였습니다");
+        } catch (Exception e) {
+            log.error("전체 게시글 개수 조회(기타 오류) = {}", e.getMessage());
+            throw new RuntimeException("전체 게시글 개수 조회 중 오류가 발생하였습니다");
         }
     }
 }
